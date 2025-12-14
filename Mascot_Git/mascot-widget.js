@@ -176,7 +176,7 @@
             this.isOpen = false;
             this.history = [];
             this.overlayHost = null;
-            this.AI_API_URL = 'https://ai-mascotconstr-pydantic.onrender.com'; // Проверь порт!
+            this.AI_API_URL = 'https://ai-mascotconstr-pydantic.onrender.com/api/chat'; // Проверь порт!
             this._createOverlayHost();
             this._renderWidget();
         }
@@ -555,3 +555,4 @@
     data-api-key="YOUR_SITE_ID"
 
 ></script>*/
+
