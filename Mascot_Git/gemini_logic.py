@@ -379,8 +379,8 @@ nest_asyncio.apply()
 if not os.getenv("GEMINI_API_KEY"):
     raise ValueError("❌ Ошибка: GEMINI_API_KEY не найден!")
 
-# Используем 1.5-flash (бесплатная и стабильная)
-model = GeminiModel('gemini-1.5-flash')
+# Используем 2.5-flash (бесплатная и стабильная)
+model = GeminiModel('gemini-2.5-flash')
 
 # --- 2. Подготовка Схемы ---
 # Генерируем описание JSON схемы вручную, чтобы передать модели текстом
@@ -455,5 +455,6 @@ def get_gemini_action(user_message: str, page_context_data: List[Dict[str, Any]]
             "response_text": "Что-то пошло не так. Попробуйте еще раз.",
             "action": None
 }
+
 
 
