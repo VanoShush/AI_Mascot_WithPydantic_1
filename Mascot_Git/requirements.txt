@@ -1,8 +1,9 @@
 Flask
 flask-cors
 python-dotenv
-google-genai
-pydantic-ai
+google-genai>=0.3.0
+pydantic-ai>=0.0.24
 
 nest_asyncio
 gunicorn
+
