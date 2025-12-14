@@ -338,7 +338,7 @@ def get_gemini_action(user_message: str, page_context_data: List[Dict[str, Any]]
         
         # 4. Ручной парсинг ответа (так как result_type отключен)
         # Очищаем от возможных markdown-тегов (```json ... ```)
-        raw_text = result.text
+        raw_text = result.data
         if "```" in raw_text:
             raw_text = raw_text.split("```json")[-1].split("```")[0].strip()
         elif raw_text.strip().startswith("```"):
@@ -357,3 +357,4 @@ def get_gemini_action(user_message: str, page_context_data: List[Dict[str, Any]]
             "action": None
 
         }
+
