@@ -1,0 +1,6 @@
+Flask
+flask-cors
+python-dotenv
+google-genai
+pydantic-ai
+nest_asyncio
