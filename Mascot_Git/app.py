@@ -1,6 +1,6 @@
 # # app.py
 # import os
-# from flask import Flask, request, jsonify
+# from flask import Flask, request, jsonify, send_from_directory
 # from flask_cors import CORS
 # from dotenv import load_dotenv
 # from gemini_logic import get_gemini_action
@@ -107,4 +107,5 @@ if __name__ == '__main__':
     
     # 2. Обязательно указываем хост '0.0.0.0' для работы на Render/в облаке.
     app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
+
 
