@@ -359,102 +359,185 @@
 #         }
 
 
+# import os
+# import json
+# import nest_asyncio
+# from typing import List, Dict, Any
+# from dotenv import load_dotenv
+
+# # Загрузка переменных
+# load_dotenv('MyApiConstr.env') 
+
+# from pydantic_ai import Agent
+# from pydantic_ai.models.gemini import GeminiModel
+# # Импортируем схему
+# from schemas import MascotResponse
+
+# nest_asyncio.apply()
+
+# # --- 1. Настройка Модели ---
+# if not os.getenv("GEMINI_API_KEY"):
+#     raise ValueError("❌ Ошибка: GEMINI_API_KEY не найден!")
+
+# # Используем 2.5-flash (бесплатная и стабильная)
+# model = GeminiModel('gemini-2.5-flash')
+
+# # --- 2. Подготовка Схемы ---
+# # Генерируем описание JSON схемы вручную, чтобы передать модели текстом
+# # Это работает на ЛЮБОЙ версии библиотеки
+# schema_json = json.dumps(MascotResponse.model_json_schema(), indent=2, ensure_ascii=False)
+
+# SYSTEM_PROMPT = f"""
+# Ты — анимированный AI-ассистент 'Alpha'.
+# Твоя задача — помогать пользователю и управлять интерфейсом.
+
+# У тебя есть доступ к КОНТЕКСТУ СТРАНИЦЫ (список элементов).
+
+# ТЫ ОБЯЗАН ОТВЕЧАТЬ ТОЛЬКО В ФОРМАТЕ JSON, соответствующем этой схеме:
+# {schema_json}
+
+# ПРАВИЛА:
+# 1. Если вопрос про конкретный товар/кнопку — найди элемент в контексте и верни action с его 'selector'.
+# 2. Если элемента нет — action: null.
+# 3. response_text должен быть дружелюбным.
+# 4. НЕ пиши никаких пояснений. Только чистый JSON.
+# """
+
+# # --- 3. Инициализация Агента ---
+# # ВАЖНО: Мы НЕ используем result_type, чтобы избежать ошибки "Unknown keyword argument"
+# agent = Agent(
+#     model,
+#     system_prompt=SYSTEM_PROMPT,
+#     retries=2
+# )
+
+# # --- 4. Основная Функция ---
+# def get_gemini_action(user_message: str, page_context_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+#     try:
+#         # Формируем контекст
+#         context_str_list = []
+#         if page_context_data:
+#             for item in page_context_data:
+#                 t_type = item.get('type', 'unknown')
+#                 t_text = item.get('text', '')[:60]
+#                 t_sel = item.get('selector', 'no-id')
+#                 context_str_list.append(f"[{t_type}] '{t_text}' (ID: {t_sel})")
+        
+#         context_text = "\n".join(context_str_list) if context_str_list else "Контекст пуст."
+
+#         full_prompt = (
+#             f"КОНТЕКСТ СТРАНИЦЫ:\n{context_text}\n\n"
+#             f"ВОПРОС ПОЛЬЗОВАТЕЛЯ: {user_message}"
+#         )
+
+#         # Вызов AI
+#         result = agent.run_sync(full_prompt)
+        
+#         # --- Ручной Парсинг (работает везде) ---
+#         raw_text = result.data
+        
+#         # Очищаем от Markdown (```json ... ```), если модель их добавила
+#         if "```" in raw_text:
+#             # Берем то, что внутри блоков кода
+#             raw_text = raw_text.split("```json")[-1].split("```")[0].strip()
+#         elif raw_text.strip().startswith("```"):
+#              raw_text = raw_text.strip("`").strip()
+
+#         # Валидируем и превращаем в словарь
+#         parsed_response = MascotResponse.model_validate_json(raw_text)
+        
+#         return parsed_response.model_dump()
+
+#     except Exception as e:
+#         print(f"🔥 Ошибка логики: {e}")
+#         # Если пришел мусор или ошибка сети, возвращаем заглушку
+#         return {
+#             "response_text": "Что-то пошло не так. Попробуйте еще раз.",
+#             "action": None
+# }
+
+
+
 import os
 import json
-import nest_asyncio
 from typing import List, Dict, Any
 from dotenv import load_dotenv
 
-# Загрузка переменных
-load_dotenv('MyApiConstr.env') 
+# Импорт официального SDK Google
+from google import genai
+from google.genai import types
 
-from pydantic_ai import Agent
-from pydantic_ai.models.gemini import GeminiModel
-# Импортируем схему
+# Импорт вашей Pydantic схемы
 from schemas import MascotResponse
 
-nest_asyncio.apply()
+# Загрузка переменных
+load_dotenv('MyApiConstr.env')
 
-# --- 1. Настройка Модели ---
-if not os.getenv("GEMINI_API_KEY"):
+# Проверка ключа
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
     raise ValueError("❌ Ошибка: GEMINI_API_KEY не найден!")
 
-# Используем 2.5-flash (бесплатная и стабильная)
-model = GeminiModel('gemini-2.5-flash')
+# Инициализация клиента Google
+client = genai.Client(api_key=api_key)
 
-# --- 2. Подготовка Схемы ---
-# Генерируем описание JSON схемы вручную, чтобы передать модели текстом
-# Это работает на ЛЮБОЙ версии библиотеки
-schema_json = json.dumps(MascotResponse.model_json_schema(), indent=2, ensure_ascii=False)
-
-SYSTEM_PROMPT = f"""
-Ты — анимированный AI-ассистент 'Alpha'.
-Твоя задача — помогать пользователю и управлять интерфейсом.
-
-У тебя есть доступ к КОНТЕКСТУ СТРАНИЦЫ (список элементов).
-
-ТЫ ОБЯЗАН ОТВЕЧАТЬ ТОЛЬКО В ФОРМАТЕ JSON, соответствующем этой схеме:
-{schema_json}
-
-ПРАВИЛА:
-1. Если вопрос про конкретный товар/кнопку — найди элемент в контексте и верни action с его 'selector'.
-2. Если элемента нет — action: null.
-3. response_text должен быть дружелюбным.
-4. НЕ пиши никаких пояснений. Только чистый JSON.
-"""
-
-# --- 3. Инициализация Агента ---
-# ВАЖНО: Мы НЕ используем result_type, чтобы избежать ошибки "Unknown keyword argument"
-agent = Agent(
-    model,
-    system_prompt=SYSTEM_PROMPT,
-    retries=2
-)
-
-# --- 4. Основная Функция ---
 def get_gemini_action(user_message: str, page_context_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     try:
-        # Формируем контекст
+        # --- 1. Подготовка контекста ---
         context_str_list = []
         if page_context_data:
             for item in page_context_data:
                 t_type = item.get('type', 'unknown')
-                t_text = item.get('text', '')[:60]
+                t_text = item.get('text', '')[:60] # Обрезаем длинный текст
                 t_sel = item.get('selector', 'no-id')
                 context_str_list.append(f"[{t_type}] '{t_text}' (ID: {t_sel})")
         
         context_text = "\n".join(context_str_list) if context_str_list else "Контекст пуст."
 
-        full_prompt = (
+        # --- 2. Системная инструкция ---
+        # Мы явно просим JSON и показываем схему (хотя response_mime_type тоже поможет)
+        system_instruction = """
+        Ты — анимированный AI-ассистент 'Alpha' для веб-сайта.
+        Твоя задача — помогать пользователю и управлять интерфейсом.
+        
+        ПРАВИЛА:
+        1. Используй КОНТЕКСТ СТРАНИЦЫ для поиска элементов (товаров, кнопок).
+        2. Если нужно показать элемент -> верни action: {"type": "HIGHLIGHT", "selector": "..."}.
+        3. Если элемента нет -> action: null.
+        4. Отвечай только валидным JSON.
+        """
+
+        prompt = (
+            f"СИСТЕМНАЯ ИНСТРУКЦИЯ: {system_instruction}\n\n"
             f"КОНТЕКСТ СТРАНИЦЫ:\n{context_text}\n\n"
             f"ВОПРОС ПОЛЬЗОВАТЕЛЯ: {user_message}"
         )
 
-        # Вызов AI
-        result = agent.run_sync(full_prompt)
-        
-        # --- Ручной Парсинг (работает везде) ---
-        raw_text = result.data
-        
-        # Очищаем от Markdown (```json ... ```), если модель их добавила
-        if "```" in raw_text:
-            # Берем то, что внутри блоков кода
-            raw_text = raw_text.split("```json")[-1].split("```")[0].strip()
-        elif raw_text.strip().startswith("```"):
-             raw_text = raw_text.strip("`").strip()
+        # --- 3. Вызов Gemini (Native JSON Mode) ---
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type='application/json', # Включаем жесткий режим JSON
+                # Передаем схему Pydantic для гарантии структуры (поддерживается в новых версиях SDK)
+                response_schema=MascotResponse 
+            )
+        )
 
-        # Валидируем и превращаем в словарь
-        parsed_response = MascotResponse.model_validate_json(raw_text)
+        # --- 4. Обработка ответа ---
+        # Gemini в режиме JSON вернет текст, который идеально ложится в нашу модель
+        if not response.text:
+             return {"response_text": "Пустой ответ от AI", "action": None}
+
+        # Валидируем через Pydantic (это уберет ошибки структуры)
+        parsed_response = MascotResponse.model_validate_json(response.text)
         
         return parsed_response.model_dump()
 
     except Exception as e:
-        print(f"🔥 Ошибка логики: {e}")
-        # Если пришел мусор или ошибка сети, возвращаем заглушку
+        print(f"🔥 Критическая ошибка: {e}")
+        # Если API Google упадет или вернет мусор
         return {
-            "response_text": "Что-то пошло не так. Попробуйте еще раз.",
+            "response_text": "Извините, сервис временно недоступен.",
             "action": None
-}
-
-
-
+        }
