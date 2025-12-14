@@ -176,7 +176,7 @@
             this.isOpen = false;
             this.history = [];
             this.overlayHost = null;
-            this.AI_API_URL = 'http://localhost:3000/api/chat'; // Проверь порт!
+            this.AI_API_URL = 'https://ai-mascotconstr-pydantic.onrender.com'; // Проверь порт!
             this._createOverlayHost();
             this._renderWidget();
         }
@@ -553,4 +553,5 @@
     async 
     src="mascot-widget.js" 
     data-api-key="YOUR_SITE_ID"
+
 ></script>*/
