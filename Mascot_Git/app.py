@@ -90,5 +90,12 @@ def chat_endpoint():
 
 # --- 3. Запуск ---
 if __name__ == '__main__':
-    print(f"🚀 Mascot Backend (Native) запущен на http://localhost:{PORT}")
-    app.run(port=PORT, debug=True, use_reloader=False)
+    # 1. Получаем порт из переменной окружения Render (os.environ.get('PORT')).
+    # Если переменной нет (при локальном запуске), используем 3000 как fallback.
+    # Обратите внимание: Render передает порт как строку, поэтому нужно int().
+    port = int(os.environ.get('PORT', 3000))
+    
+    print(f"🚀 Mascot Backend запущен на http://0.0.0.0:{port}")
+    
+    # 2. Обязательно указываем хост '0.0.0.0' для работы на Render/в облаке.
+    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
