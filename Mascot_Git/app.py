@@ -76,9 +76,9 @@ if not gemini_key:
 # --- 2. Маршрут для отдачи виджета ---
 @app.route('/mascot-widget.js')
 def serve_widget_js():
-    # Эта функция ищет файл 'mascot-widget.js' в текущей папке ('.') 
+    # Эта функция ищет файл 'mascot-widget.js'
     # и отдает его с правильным MIME-типом для JavaScript.
-    return send_from_directory('.', 'mascot-widget.js', mimetype='application/javascript')
+    return send_from_directory(app.root_path, 'mascot-widget.js', mimetype='application/javascript')
 
 
 # --- 2. Маршрут API ---
@@ -107,5 +107,6 @@ if __name__ == '__main__':
     
     # 2. Обязательно указываем хост '0.0.0.0' для работы на Render/в облаке.
     app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
+
 
 
